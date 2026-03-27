@@ -1,0 +1,25 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<div class="container">
+    <div class="card">
+
+        <h2>Editar salário do mês</h2>
+
+        <form method="post">
+
+            <select name="mes" required>
+                {% for mes in meses %}
+                    <option value="{{ mes.value }}">{{ mes.name.capitalize() }}</option>
+                {% endfor %}
+            </select>
+            <input type="number" name="ano" placeholder="Ano" required>
+            <input type="number" step="0.01" name="valor" placeholder="Novo valor" required>
+            <label>
+                <input type="checkbox" name="futuros">
+                Aplicar para próximos meses
+            </label>
+            <button type="submit">Salvar</button>
+
+        </form>
+
+    </div>
+</div>

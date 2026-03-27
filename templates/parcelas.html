@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Parcelas</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <div>Saldo atual</div>
+        <div class="saldo">R$ {{ saldo.valor | round(2) }}</div>
+        <h2>Nova compra parcelada</h2>
+
+        <form method="post">
+
+            <label>Valor total</label>
+            <input type="number" step="0.01" name="valor" required>
+
+            <label>Quantidade de parcelas</label>
+            <select name="parcelas" required>
+                {% for i in range(1, 13) %}
+                    <option value="{{ i }}">{{ i }}x</option>
+                {% endfor %}
+            </select>
+
+            <label>Mês de início</label>
+            <select name="mes" required>
+                {% for mes in meses %}
+                    <option value="{{ mes.value }}">{{ mes.name.capitalize() }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Adicionar</button>
+
+        </form>
+
+        <a href="/"><button>Voltar</button></a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

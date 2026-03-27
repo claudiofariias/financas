@@ -1,0 +1,24 @@
+<div class="centered">
+    <div class="card">
+        <h2>Configuração inicial</h2>
+        <form method="post">
+            <label>Saldo inicial</label>
+            <input type="number" name="valor" required>
+            <div style="margin-top: 16px; display: flex; align-items: center;">
+                <input type="checkbox" id="tem_salario" name="tem_salario" onchange="toggleSalario(this.checked)">
+                <label for="tem_salario" style="margin-left: 8px;">Tenho salário fixo</label>
+            </div>
+            <div id="salarioField" style="display:none;">
+                <label>Valor do salário</label>
+                <input type="number" name="salario">
+            </div>
+            <button type="submit">Continuar</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleSalario(checked) {
+        document.getElementById('salarioField').style.display = checked ? 'block' : 'none';
+    }
+</script>

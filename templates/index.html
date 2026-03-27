@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <div>Saldo atual</div>
+        <div class="saldo">R$ {{ saldo.valor }}</div>
+        <div class="menu-container">
+            <div class="menu-icon" onclick="toggleMenu()">&#x22EE;</div>
+            <div class="menu-dropdown" id="menu">
+                <a href="/logout">Sair</a>
+                <a href="/limpar_dados">Limpar dados</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <a href="/movimentacao"><button style="background: rgb(0, 159, 0);">Adicionar entrada</button></a>
+        <a href="/movimentacao"><button style="background:#dc2626;">Adicionar saída</button></a>
+        <a href="/parcelas"><button>Adicionar compra parcelada</button></a>
+        <a href="/faturas"><button style="
+        border: 2px solid #2563eb;
+        background-color: white;
+        color: #2563eb;
+        padding: 10px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+    ">
+        Ver próximas faturas
+    </button></a>
+    </div>
+
+</div>
+
+<div class="container">
+    <div class="card">
+        <h2>Histórico de Transações</h2>
+        <div class="lista">
+            {% for item in historico %}
+                <div class="item">
+                    <span>{{ item.categoria }} - {{ item.descricao }}</span>
+                    <div>
+                        <span class="{% if item.tipo == 'receita' %}positivo{% else %}negativo{% endif %}">R$ {{ item.valor }}</span>
+                        {% if item.id %}
+                        <a href="{{ url_for('main.editar_transacao', transacao_id=item.id) }}">Editar</a>
+                        <a href="{{ url_for('main.excluir_transacao', transacao_id=item.id) }}">Excluir</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div>Nenhuma transação registrada.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleMenu() {
+        const menu = document.getElementById('menu');
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
+        }
+    }
+</script>
+</body>
+</html>

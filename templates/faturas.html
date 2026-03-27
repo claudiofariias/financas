@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Próximas despesas parceladas</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Próximas despesas parceladas</h2>
+
+        {% for p in projecao %}
+            <div class="item">
+                <span>{{ p.mes_nome }}/{{ p.ano }}</span>
+
+                <span class="{% if p.saldo >= 0 %}positivo{% else %}negativo{% endif %}">
+                    R$ {{ p.saldo }}
+                </span>
+            </div>
+        {% else %}
+            <div>Nenhuma projeção disponível</div>
+        {% endfor %}
+
+        <a href="/limpar_parcelas"><button style="background:#dc2626;">Limpar todas as faturas</button></a>
+        <a href="/"><button>Voltar</button></a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
