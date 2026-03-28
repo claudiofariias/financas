@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Próximas despesas parceladas</title>
+    <title>Saldo Projetado</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -13,26 +13,61 @@
 <div class="container">
 
     <div class="card">
-        <h2>Próximas despesas parceladas</h2>
+        <h2>Saldo Projetado</h2>
 
         {% for p in projecao %}
-            <div class="item">
+            <div class="item" onclick="toggleDetalhes('detalhes-{{ loop.index }}')">
                 <span>{{ p.mes_nome }}/{{ p.ano }}</span>
-
                 <span class="{% if p.saldo >= 0 %}positivo{% else %}negativo{% endif %}">
-                    R$ {{ p.saldo }}
+                    {{ p.saldo|currency }}
                 </span>
+            </div>
+            <div id="detalhes-{{ loop.index }}" class="detalhes-parcelas" style="display: none;">
+                {% for parcela in p.parcelas %}
+                    <div class="detalhe-item">
+                        <span>{{ parcela.descricao }}</span>
+                        <span class="negativo">{{ parcela.valor|currency }}</span>
+                    </div>
+                {% endfor %}
             </div>
         {% else %}
             <div>Nenhuma projeção disponível</div>
         {% endfor %}
 
-        <a href="/limpar_parcelas"><button style="background:#dc2626;">Limpar todas as faturas</button></a>
+        <a href="#" onclick="showModal('modal-limpar-faturas')"><button style="background:#dc2626;">Limpar todas as faturas</button></a>
         <a href="/"><button>Voltar</button></a>
 
     </div>
 
 </div>
 
+<!-- Modal de Confirmação -->
+<div id="modal-limpar-faturas" class="modal-overlay">
+    <div class="modal">
+        <h3>Confirmar Ação</h3>
+        <p>Tem certeza que deseja limpar todas as faturas?</p>
+        <a href="/limpar_parcelas"><button style="background:#dc2626;">Sim, limpar</button></a>
+        <button onclick="hideModal('modal-limpar-faturas')">Cancelar</button>
+    </div>
+</div>
+
+<script>
+    function showModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    }
+
+    function hideModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
+
+    function toggleDetalhes(detalhesId) {
+        const detalhes = document.getElementById(detalhesId);
+        if (detalhes.style.display === 'none') {
+            detalhes.style.display = 'block';
+        } else {
+            detalhes.style.display = 'none';
+        }
+    }
+</script>
 </body>
 </html>

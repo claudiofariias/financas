@@ -102,9 +102,11 @@ def calcular_projecao(saldo_data, meses=12):
         
         saldo_futuro += salario_planejado
 
+        parcelas_mes = []
         for p in saldo_data.get("parcelas", []):
             if p["mes"] == mes and p["ano"] == ano:
                 saldo_futuro -= p["valor"]
+                parcelas_mes.append(p)
         
         salario_recebido = next(
             (s["valor"] for s in salarios_recebidos if s["mes"] == mes and s["ano"] == ano),
@@ -116,7 +118,8 @@ def calcular_projecao(saldo_data, meses=12):
             "ano": ano,
             "saldo": round(saldo_futuro, 2),
             "salario_planejado": salario_planejado,
-            "salario_recebido": salario_recebido
+            "salario_recebido": salario_recebido,
+            "parcelas": parcelas_mes
         })
 
     return projecao

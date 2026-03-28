@@ -14,7 +14,7 @@
 
     <div class="card">
         <div>Saldo atual</div>
-        <div class="saldo">R$ {{ saldo.valor | round(2) }}</div>
+        <div class="saldo">{{ saldo.valor|currency }}</div>
         <h2>Nova compra parcelada</h2>
 
         <form method="post">
@@ -35,6 +35,9 @@
                     <option value="{{ mes.value }}">{{ mes.name.capitalize() }}</option>
                 {% endfor %}
             </select>
+
+            <label>Descrição</label>
+            <input type="text" name="descricao">
 
             <button type="submit">Adicionar</button>
 

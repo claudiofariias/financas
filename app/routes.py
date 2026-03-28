@@ -8,13 +8,10 @@ bp = Blueprint("main", __name__)
 # 🔹 DASHBOARD
 @bp.route("/")
 def index():
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
-
-    if not saldo.data.get("initial_setup_done"):
-        return redirect("/setup")
+    saldo = Saldo(session["username"])
 
     despesas = saldo.data.get("despesas", [])
     receitas = saldo.data.get("receitas", [])
@@ -23,34 +20,13 @@ def index():
 
 
 # 🔹 SETUP INICIAL
-@bp.route("/setup", methods=["GET", "POST"])
-def setup():
-    if "user_email" not in session:
-        return redirect("/login")
-
-    saldo = Saldo(session["user_email"])
-
-    if request.method == "POST":
-        valor = float(request.form["valor"])
-        tem_salario = request.form.get("tem_salario") == "on"
-        salario = float(request.form.get("salario") or 0) if tem_salario else 0
-
-        saldo.definir_saldo_inicial(valor)
-
-        return redirect("/")
-
-    return render_template("setup.html")
-
-
-
-
 # 🔹 RECEITA
 @bp.route("/receita", methods=["GET", "POST"])
 def receita():
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
+    saldo = Saldo(session["username"])
 
     if request.method == "POST":
         valor = float(request.form["valor"])
@@ -64,10 +40,10 @@ def receita():
 # 🔹 DESPESA
 @bp.route("/despesa", methods=["GET", "POST"])
 def despesa():
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
+    saldo = Saldo(session["username"])
 
     if request.method == "POST":
         valor = float(request.form["valor"])
@@ -81,17 +57,18 @@ def despesa():
 # 🔹 PARCELAS
 @bp.route("/parcelas", methods=["GET", "POST"])
 def parcelas():
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
+    saldo = Saldo(session["username"])
 
     if request.method == "POST":
         valor = float(request.form["valor"])
         parcelas = int(request.form["parcelas"])
         mes = int(request.form["mes"])
+        descricao = request.form["descricao"]
 
-        saldo.adicionar_parcela(valor, parcelas, mes)
+        saldo.adicionar_parcela(valor, parcelas, mes, descricao)
 
         return redirect("/")
 
@@ -101,10 +78,10 @@ def parcelas():
 # 🔹 LISTA DE PARCELAS
 @bp.route("/parcelas/lista")
 def lista_parcelas():
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
+    saldo = Saldo(session["username"])
     return render_template("lista_parcelas.html", parcelas=saldo.data.get("parcelas", []))
 
 
@@ -112,29 +89,29 @@ def lista_parcelas():
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
+        username = request.form["username"]
         password = request.form["password"]
 
-        user = User.find_by_email(email)
+        user = User.find_by_username(username)
 
         if user and User.check_password(user["password"], password):
-            session["user_email"] = email
+            session["username"] = username
             return redirect("/")
         else:
-            flash("Email ou senha inválidos.")
+            flash("Usuário ou senha inválidos.")
 
     return render_template("login.html")
 
 @bp.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        email = request.form["email"]
+        username = request.form["username"]
         password = request.form["password"]
 
-        if User.find_by_email(email):
-            flash("Este email já está em uso.")
+        if User.find_by_username(username):
+            flash("Este nome de usuário já está em uso.")
         else:
-            user = User(email, password)
+            user = User(username, password)
             user.save()
             flash("Conta criada com sucesso!")
             return redirect("/login")
@@ -143,18 +120,20 @@ def register():
 
 @bp.route("/logout")
 def logout():
-    session.pop("user_email", None)
+    session.pop("username", None)
     return redirect("/login")
 
 @bp.route("/movimentacao", methods=["GET", "POST"])
 def movimentacao():
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
+    saldo = Saldo(session["username"])
+
+    tipo = request.args.get("tipo", "receita")  # 👈 PEGA DA URL
 
     if request.method == "POST":
-        tipo = request.form["tipo"]
+        tipo = request.form["tipo"]  # 👈 vem do hidden input
         valor = float(request.form["valor"])
         categoria = request.form["categoria"]
         descricao = request.form["descricao"]
@@ -166,16 +145,22 @@ def movimentacao():
 
         return redirect("/")
 
-    categorias_receita_dict = {cat.name: cat.value for cat in CategoriaReceita}
-    categorias_despesa_dict = {cat.name: cat.value for cat in CategoriaDespesa}
-    return render_template("movimentacao.html", saldo=saldo.data, categorias_receita=categorias_receita_dict, categorias_despesa=categorias_despesa_dict)
+    categorias_receita_dict = {cat.value: cat.value for cat in CategoriaReceita}
+    categorias_despesa_dict = {cat.value: cat.value for cat in CategoriaDespesa}
 
+    return render_template(
+        "movimentacao.html",
+        saldo=saldo.data,
+        categorias_receita=categorias_receita_dict,
+        categorias_despesa=categorias_despesa_dict,
+        tipo=tipo
+    )
 @bp.route("/faturas")
 def faturas():
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
+    saldo = Saldo(session["username"])
     projecao = calcular_projecao(saldo.data)
 
     # Adiciona o nome do mês na projeção
@@ -186,10 +171,10 @@ def faturas():
 
 @bp.route("/editar_transacao/<transacao_id>", methods=["GET", "POST"])
 def editar_transacao(transacao_id):
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
+    saldo = Saldo(session["username"])
 
     if request.method == "POST":
         valor = float(request.form["valor"])
@@ -198,33 +183,39 @@ def editar_transacao(transacao_id):
         saldo.editar_transacao(transacao_id, valor, categoria, descricao)
         return redirect("/")
     
-    @bp.route("/limpar_parcelas")
-    def limpar_parcelas():
-        if "user_email" not in session:
-            return redirect("/login")
+    saldo_instance = Saldo(session["username"])
+    transacao = saldo_instance.get_transacao(transacao_id)
     
-        saldo = Saldo(session["user_email"])
-        saldo.limpar_parcelas()
-        return redirect("/faturas")
-    
-    @bp.route("/limpar_dados")
-    def limpar_dados():
-        if "user_email" not in session:
-            return redirect("/login")
-    
-        saldo = Saldo(session["user_email"])
-        saldo.limpar()
+    if transacao is None:
+        flash("Transação não encontrada.")
         return redirect("/")
 
-    transacao = saldo.get_transacao(transacao_id)
     return render_template("editar_transacao.html", transacao=transacao)
+
+@bp.route("/limpar_parcelas")
+def limpar_parcelas():
+    if "username" not in session:
+        return redirect("/login")
+
+    saldo = Saldo(session["username"])
+    saldo.limpar_parcelas()
+    return redirect("/faturas")
+
+@bp.route("/limpar_dados")
+def limpar_dados():
+    if "username" not in session:
+        return redirect("/login")
+
+    saldo = Saldo(session["username"])
+    saldo.limpar()
+    return redirect("/")
 
 @bp.route("/excluir_transacao/<transacao_id>")
 def excluir_transacao(transacao_id):
-    if "user_email" not in session:
+    if "username" not in session:
         return redirect("/login")
 
-    saldo = Saldo(session["user_email"])
+    saldo = Saldo(session["username"])
     saldo.excluir_transacao(transacao_id)
     return redirect("/")
 

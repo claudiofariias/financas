@@ -14,30 +14,27 @@
 
     <div class="card">
         <div>Saldo atual</div>
-        <div class="saldo">R$ {{ saldo.valor }}</div>
+        <div class="saldo">{{ saldo.valor|currency }}</div>
         <div class="menu-container">
             <div class="menu-icon" onclick="toggleMenu()">&#x22EE;</div>
             <div class="menu-dropdown" id="menu">
                 <a href="/logout">Sair</a>
-                <a href="/limpar_dados">Limpar dados</a>
+                <a href="#" onclick="showModal('modal-limpar-dados')">Limpar dados</a>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <a href="/movimentacao"><button style="background: rgb(0, 159, 0);">Adicionar entrada</button></a>
-        <a href="/movimentacao"><button style="background:#dc2626;">Adicionar saída</button></a>
-        <a href="/parcelas"><button>Adicionar compra parcelada</button></a>
-        <a href="/faturas"><button style="
-        border: 2px solid #2563eb;
-        background-color: white;
-        color: #2563eb;
-        padding: 10px 16px;
-        border-radius: 10px;
-        cursor: pointer;
-    ">
-        Ver próximas faturas
-    </button></a>
+        <a href="/movimentacao?tipo=receita">
+            <button style="background: rgb(0, 159, 0);">Adicionar entrada</button>
+        </a>
+        <a href="/movimentacao?tipo=despesa">
+            <button style="background:#dc2626;">Adicionar saída</button>
+        </a>
+        <div class="button-group">
+            <a href="/parcelas"><button>Compra parcelada</button></a>
+            <a href="/faturas"><button class="btn-secondary">Ver próximas faturas</button></a>
+        </div>
     </div>
 
 </div>
@@ -48,9 +45,9 @@
         <div class="lista">
             {% for item in historico %}
                 <div class="item">
-                    <span>{{ item.categoria }} - {{ item.descricao }}</span>
+                    <span>{{ item.categoria }}: {{ item.descricao }}</span>
                     <div>
-                        <span class="{% if item.tipo == 'receita' %}positivo{% else %}negativo{% endif %}">R$ {{ item.valor }}</span>
+                        <span class="{% if item.tipo == 'receita' %}positivo{% else %}negativo{% endif %}">{{ item.valor|currency }}</span>
                         {% if item.id %}
                         <a href="{{ url_for('main.editar_transacao', transacao_id=item.id) }}">Editar</a>
                         <a href="{{ url_for('main.excluir_transacao', transacao_id=item.id) }}">Excluir</a>
@@ -64,6 +61,16 @@
     </div>
 </div>
 
+<!-- Modal de Confirmação -->
+<div id="modal-limpar-dados" class="modal-overlay">
+    <div class="modal">
+        <h3>Confirmar Ação</h3>
+        <p>Tem certeza que deseja limpar todos os dados?</p>
+        <a href="/limpar_dados"><button style="background:#dc2626;">Sim, limpar</button></a>
+        <button onclick="hideModal('modal-limpar-dados')">Cancelar</button>
+    </div>
+</div>
+
 <script>
     function toggleMenu() {
         const menu = document.getElementById('menu');
@@ -72,6 +79,14 @@
         } else {
             menu.style.display = 'block';
         }
+    }
+
+    function showModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    }
+
+    function hideModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
     }
 </script>
 </body>

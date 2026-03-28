@@ -72,6 +72,27 @@ button {
     cursor: pointer;
 }
 
+.btn-secondary {
+    background-color: white;
+    color: #2563eb;
+    border: 2px solid #2563eb;
+    padding: 12px; /* 14px base padding - 2px border */
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.button-group a {
+    flex: 1;
+}
+
+.button-group button {
+    margin-top: 0;
+}
+
 /* Lista */
 .lista {
     margin-top: 10px;
@@ -83,6 +104,19 @@ button {
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
     font-size: 14px;
+}
+
+.detalhes-parcelas {
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid var(--border);
+}
+
+.detalhe-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12px;
 }
 
 /* Destaques */
@@ -149,6 +183,13 @@ a {
 .auth-container p {
     text-align: center;
     margin-top: 16px;
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        margin: 20px 10px;
+        padding: 20px;
+    }
 }
 
 /* Flashes */
