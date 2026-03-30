@@ -117,25 +117,59 @@ class Saldo:
                 return transacao
         return None
 
-    def editar_transacao(self, transacao_id, valor, categoria, descricao):
-        for transacao in self.data["despesas"]:
-            if transacao["id"] == transacao_id:
-                self.data["valor"] += transacao["valor"]
-                transacao["valor"] = valor
-                transacao["categoria"] = categoria
-                transacao["descricao"] = descricao
+    def editar_transacao(self, transacao_id, valor, categoria, descricao, num_parcelas=None):
+        import re
+        transacao_original = self.get_transacao(transacao_id)
+
+        if not transacao_original:
+            return
+
+        # Se não for compra parcelada, usa a lógica simples
+        if transacao_original.get("categoria") != "Compra Parcelada":
+            lista_transacoes = None
+            if transacao_original["tipo"] == "despesa":
+                lista_transacoes = self.data["despesas"]
+                self.data["valor"] += transacao_original["valor"]
                 self.data["valor"] -= valor
-                self.salvar()
-                return
-        for transacao in self.data["receitas"]:
-            if transacao["id"] == transacao_id:
-                self.data["valor"] -= transacao["valor"]
-                transacao["valor"] = valor
-                transacao["categoria"] = categoria
-                transacao["descricao"] = descricao
+            elif transacao_original["tipo"] == "receita":
+                lista_transacoes = self.data["receitas"]
+                self.data["valor"] -= transacao_original["valor"]
                 self.data["valor"] += valor
-                self.salvar()
-                return
+            
+            if lista_transacoes is not None:
+                for transacao in lista_transacoes:
+                    if transacao["id"] == transacao_id:
+                        transacao["valor"] = valor
+                        transacao["categoria"] = categoria
+                        transacao["descricao"] = descricao
+                        break
+            self.salvar()
+            return
+
+        # --- Tratamento para Compra Parcelada ---
+
+        # 1. Limpa a descrição para remover o texto da parcela antiga
+        clean_descricao = re.sub(r'\s\(\d+x de R\$ [0-9,.]+\)$', '', descricao)
+
+        # 2. Guarda os dados necessários da transação original
+        #    Usa o novo número de parcelas se for fornecido, senão mantém o antigo.
+        novo_num_parcelas = num_parcelas if num_parcelas is not None else transacao_original["parcelas"]
+        
+        parcelas_originais = [p for p in self.data["parcelas"] if p.get("transacao_id") == transacao_id]
+        
+        if not parcelas_originais:
+            self.excluir_transacao(transacao_id)
+            self.adicionar_despesa(valor, categoria, clean_descricao)
+            return
+
+        primeira_parcela = min(parcelas_originais, key=lambda x: (x["ano"], x["mes"]))
+        mes_inicio = primeira_parcela["mes"]
+
+        # 3. Exclui a transação antiga completamente
+        self.excluir_transacao(transacao_id)
+
+        # 4. Adiciona a nova transação parcelada com os dados corretos
+        self.adicionar_parcela(valor, novo_num_parcelas, mes_inicio, clean_descricao)
 
     def limpar_parcelas(self):
         self.data["parcelas"] = []

@@ -82,6 +82,12 @@ def calcular_projecao(saldo_data, meses=12):
     hoje = date.today()
     saldo_atual = saldo_data.get("valor", 0)
     projecao = []
+
+    # Adiciona de volta o valor das parcelas do mês atual ao saldo
+    # para evitar a dupla contagem na projeção.
+    for p in saldo_data.get("parcelas", []):
+        if p["mes"] == hoje.month and p["ano"] == hoje.year:
+            saldo_atual += p["valor"]
     
     salarios_recebidos = saldo_data.get("salarios_recebidos", [])
     

@@ -12,16 +12,68 @@
         <h2>Editar Transação</h2>
         <form method="post">
             <label>Valor</label>
-            <input type="number" step="0.01" name="valor" value="{{ transacao.valor }}" required>
+            <input type="number" step="0.01" name="valor" id="valor" value="{{ transacao.valor }}" required>
 
             <label>Categoria</label>
-            <input type="text" name="categoria" value="{{ transacao.categoria }}" required>
+            <input type="text" name="categoria" value="{{ transacao.categoria }}" required readonly>
 
             <label>Descrição</label>
             <input type="text" name="descricao" value="{{ transacao.descricao }}">
 
+            {% if transacao.categoria == 'Compra Parcelada' %}
+            <label>
+                Parcelas
+                {% if info_parcela %}
+                    <small>({{ info_parcela }})</small>
+                {% endif %}
+            </label>
+            <select name="parcelas" id="parcelas-select">
+                {% for i in range(1, 13) %}
+                <option value="{{ i }}" {% if i == transacao.parcelas %}selected{% endif %}>{{ i }}x</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
             <button type="submit">Salvar</button>
         </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const valorInput = document.getElementById('valor');
+        const parcelasSelect = document.getElementById('parcelas-select');
+
+        function atualizarOpcoesParcelas() {
+            if (!parcelasSelect) return;
+
+            const valor = parseFloat(valorInput.value);
+            const options = parcelasSelect.options;
+
+            if (isNaN(valor) || valor <= 0) {
+                // Reseta para o texto padrão se o valor for inválido
+                for (let i = 0; i < options.length; i++) {
+                    const numParcela = i + 1;
+                    options[i].textContent = `${numParcela}x`;
+                }
+                return;
+            }
+
+            // Atualiza cada opção com o valor calculado
+            for (let i = 0; i < options.length; i++) {
+                const numParcela = i + 1;
+                const valorParcela = (valor / numParcela).toFixed(2).replace('.', ',');
+                options[i].textContent = `${numParcela}x de R$ ${valorParcela}`;
+            }
+        }
+
+        if (valorInput) {
+            valorInput.addEventListener('input', atualizarOpcoesParcelas);
+            // Atualiza as opções ao carregar a página
+            atualizarOpcoesParcelas();
+        }
+    });
+</script>
     </div>
 </div>
 </body>

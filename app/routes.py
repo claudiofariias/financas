@@ -179,8 +179,15 @@ def editar_transacao(transacao_id):
     if request.method == "POST":
         valor = float(request.form["valor"])
         categoria = request.form["categoria"]
-        descricao = request.form["descricao"]
-        saldo.editar_transacao(transacao_id, valor, categoria, descricao)
+        descricao = request.form.get("descricao", "")
+        
+        # Se for uma compra parcelada, pega o número de parcelas do form
+        if categoria == "Compra Parcelada":
+            parcelas = int(request.form.get("parcelas", 1))
+            saldo.editar_transacao(transacao_id, valor, categoria, descricao, num_parcelas=parcelas)
+        else:
+            saldo.editar_transacao(transacao_id, valor, categoria, descricao)
+            
         return redirect("/")
     
     saldo_instance = Saldo(session["username"])
@@ -190,7 +197,17 @@ def editar_transacao(transacao_id):
         flash("Transação não encontrada.")
         return redirect("/")
 
-    return render_template("editar_transacao.html", transacao=transacao)
+    info_parcela = None
+    if transacao.get("categoria") == "Compra Parcelada":
+        todas_parcelas = saldo_instance.data.get("parcelas", [])
+        parcelas_transacao = [p for p in todas_parcelas if p.get("transacao_id") == transacao_id]
+        if parcelas_transacao:
+            primeira_parcela = min(parcelas_transacao, key=lambda x: (x["ano"], x["mes"]))
+            mes_nome = Mes(primeira_parcela["mes"]).name.capitalize()
+            ano = primeira_parcela["ano"]
+            info_parcela = f"Início em: {mes_nome}/{ano}"
+
+    return render_template("editar_transacao.html", transacao=transacao, info_parcela=info_parcela)
 
 @bp.route("/limpar_parcelas")
 def limpar_parcelas():
